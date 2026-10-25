@@ -8,183 +8,140 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <style>
+        /* MOBILE / SCREEN STYLING */
         body { background-color: #f3f4f6; font-family: Arial, sans-serif; }
         .section-card { background: white; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d1d5db; }
         input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #ffffff; font-size: 16px; margin-top: 0.25rem; color: #000; }
         input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
         label { display: block; font-weight: bold; color: #374151; font-size: 0.9rem; margin-top: 0.75rem; }
-        
         .grid-layout { display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
-        @media (min-width: 640px) { .grid-layout { grid-template-columns: 1fr 1fr; } }
-        
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.25rem; font-weight: bold; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; }
-        .btn-blue { background-color: #1e3a8a; color: white; }
-        .btn-red { background-color: #dc2626; color: white; }
+        .grid-2 { display: grid; gap: 0.5rem; grid-template-columns: 1fr 1fr; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.25rem; font-weight: bold; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; background-color: #1e3a8a; color: white; }
         .btn-gray { background-color: #d1d5db; color: #111827; }
+        .btn-red { background-color: #dc2626; color: white; }
         
         #signature-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 50; align-items: center; justify-content: center; }
         #signature-pad-container { background: white; padding: 1rem; border-radius: 0.5rem; width: 95%; max-width: 500px; }
-        
-        .cancelled-top { opacity: 0.5; position: relative; }
-        .cancelled-top::after { content: 'VOID'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: red; font-weight: bold; border: 4px solid red; padding: 5px; pointer-events: none; }
 
-        /* NATIVE PDF PRINT STYLING */
+        /* STRICT PAPER-REPLICA PRINT STYLING */
         @media print {
-            @page { margin: 0.5in; }
-            body { background-color: white !important; padding: 0 !important; font-size: 12pt; color: black; }
-            .section-card { border: none !important; padding: 0 !important; margin-bottom: 1.5rem !important; border-radius: 0 !important; box-shadow: none !important; page-break-inside: avoid; break-inside: avoid; }
-            h2 { border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 8px; color: #000 !important; font-size: 14pt; }
-            input, textarea, select { border: none !important; border-bottom: 1px solid #ccc !important; background: transparent !important; padding: 4px 0 !important; margin-top: 0 !important; font-size: 12pt !important; height: auto !important; resize: none; overflow: visible; }
-            label { font-size: 10pt; color: #333 !important; margin-top: 8px; }
-            .no-print, .btn, input[type="file"] { display: none !important; }
-            .fixed { display: none !important; }
-            img { max-height: 400px; page-break-inside: avoid; break-inside: avoid; }
+            @page { margin: 0.4in; size: letter portrait; }
+            body { background-color: white !important; padding: 0 !important; font-size: 10pt; color: black; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+            
+            /* Reconstruct the PNR tabular look */
+            .section-card { border: 1px solid #000 !important; padding: 0 !important; margin-bottom: 0.5rem !important; border-radius: 0 !important; box-shadow: none !important; page-break-inside: avoid; }
+            
+            /* Blue Headers mimicking the paper form */
+            h2 { background-color: #b4c6e7 !important; color: #000 !important; font-size: 11pt; font-weight: bold; text-align: center; border-bottom: 1px solid #000; padding: 4px; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            
+            /* Convert grids to look like table cells */
+            .grid-layout, .grid-2 { display: flex; flex-wrap: wrap; gap: 0; }
+            .grid-layout > div, .grid-2 > div { flex: 1 1 48%; border: 1px solid #000; margin: -1px 0 0 -1px; padding: 2px 4px; background-color: #eaeff7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; display: flex; align-items: center; }
+            .col-span-2 { flex: 1 1 100% !important; }
+            
+            /* Strip input boxes and just leave the text */
+            input, textarea, select { border: none !important; background: transparent !important; padding: 0 0 0 5px !important; margin: 0 !important; font-size: 10pt !important; width: auto; flex-grow: 1; height: auto !important; resize: none; color: #000; }
+            
+            label { font-size: 9pt; color: #000 !important; font-weight: normal; margin: 0; white-space: nowrap; }
+            
+            /* Hide UI elements */
+            .no-print, .btn, .fixed, input[type="file"] { display: none !important; }
+            img { max-height: 250px; border: 1px solid #000; display: block; margin: 5px auto; }
+            .cancelled-top { display: none !important; }
         }
     </style>
 </head>
 <body class="p-2 sm:p-4 pb-24 text-gray-900" id="app-container">
 
-    <div class="mb-4 bg-white p-4 rounded shadow-sm border-b-4 border-blue-900 section-card">
-        <h1 class="text-2xl font-bold text-gray-800 text-center uppercase">Job Briefing</h1>
+    <div class="mb-4 bg-white p-4 rounded border-b-4 border-blue-900 section-card no-print">
+        <h1 class="text-xl font-bold text-center uppercase">Job Briefing</h1>
     </div>
 
     <form id="briefing-form">
         <!-- Site Info -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Site Information</h2>
-            <div class="grid-layout">
-                <div><label>Date & Time Conducted:</label><input type="datetime-local" id="datetime"></div>
-                <div><label>Foreman / Supervisor:</label><input type="text" id="foreman"></div>
-                <div><label>Work Location (Mileage/Sub):</label><input type="text" id="work_location"></div>
+            <h2>Site Information</h2>
+            <div class="grid-2">
+                <div><label>Date & Time:</label><input type="datetime-local" id="datetime"></div>
                 <div><label>Head Count:</label><input type="number" id="head_count"></div>
+                <div><label>Foreman:</label><input type="text" id="foreman"></div>
+                <div><label>Location:</label><input type="text" id="work_location"></div>
             </div>
-        </div>
-
-        <!-- Group Photo -->
-        <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Group Photo</h2>
-            <label class="no-print">Use camera to photograph workgroup:</label>
-            <input type="file" accept="image/*" capture="environment" id="group_photo_input" class="no-print">
-            <img id="group_photo_preview" class="mt-4 rounded border hidden max-h-64 w-auto mx-auto" alt="Group Photo">
         </div>
 
         <!-- Emergency -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Emergency Information</h2>
-            <div class="grid-layout">
-                <div class="col-span-1 sm:col-span-2">
-                    <label>Nearest Hospital & Address:</label>
-                    <textarea id="hospital" rows="2">Fetching location (Waiting for GPS)...</textarea>
-                </div>
-                <div class="col-span-1 sm:col-span-2">
-                    <label>Current Weather Condition:</label>
-                    <textarea id="weather" rows="2">Fetching local weather...</textarea>
-                </div>
-                <div><label>Fire / Ambulance:</label><input type="text" value="911" id="fire_ambulance"></div>
-                <div><label>RTC Phone #:</label><input type="text" value="1-888-641-2177" id="rtc_phone"></div>
+            <h2>Emergency Information</h2>
+            <div class="grid-2">
+                <div class="col-span-2"><label>Nearest Hospital:</label><textarea id="hospital" rows="1">Fetching GPS...</textarea></div>
+                <div class="col-span-2"><label>Weather:</label><input type="text" id="weather" value="Fetching..."></div>
+                <div><label>Fire/Ambulance:</label><input type="text" value="911"></div>
+                <div><label>RTC Phone:</label><input type="text" value="1-888-641-2177"></div>
             </div>
         </div>
 
         <!-- Radio -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Radio / Phone Information</h2>
-            <select id="location_preset" class="no-print mb-4" onchange="updateRadioFields()">
+            <h2>Radio / Phone Information</h2>
+            <select id="location_preset" class="no-print mb-2 border p-2" onchange="updateRadioFields()">
                 <option value="">-- Select location to auto-fill --</option>
                 <option value='{"stdby":"57-05","rtc":"85-85","tone":"*31","emerg":"*30","dc":"#3"}'>Alexandria Sub (Mile 0.4 - 23.0)</option>
                 <option value='{"stdby":"52-05","rtc":"85-85","tone":"*41","emerg":"*40","dc":"#4"}'>Alexandria Sub (Mile 23.0 - 61.0)</option>
-                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Alexandria Sub (Mile 61.0 - 76.43)</option>
-                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Beachburg Sub (Mile 0.3 - 6.0)</option>
-                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*11","emerg":"*10","dc":"#1"}'>Smiths Falls (Mile 0.0 - 34.4)</option>
-                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*51","emerg":"*50","dc":"#5"}'>Brockville Sub (Mile 0.0 - 27.6)</option>
-                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*61","emerg":"*60","dc":"#6"}'>Brockville Sub (Station Tower)</option>
+                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*11","emerg":"*10","dc":"#1"}'>Smiths Falls</option>
             </select>
-            <div class="grid-layout">
-                <div><label>Stand-By Channel:</label><input type="text" id="r_stdby"></div>
-                <div><label>RTC Channel:</label><input type="text" id="r_rtc"></div>
+            <div class="grid-2">
+                <div><label>Stand-By:</label><input type="text" id="r_stdby"></div>
+                <div><label>RTC Ch:</label><input type="text" id="r_rtc"></div>
                 <div><label>RTC Tone:</label><input type="text" id="r_tone"></div>
-                <div><label>Emergency Tone:</label><input type="text" id="r_emerg"></div>
-                <div><label>DC #:</label><input type="text" id="r_dc"></div>
+                <div><label>Emerg Tone:</label><input type="text" id="r_emerg"></div>
             </div>
         </div>
 
-        <!-- Rules -->
+        <!-- Group Photo -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Rule of the Day</h2>
-            <label>Rule Number & Description:</label><input type="text" id="rule_of_day">
-            <label>TLDR (Summary):</label><textarea id="rule_tldr" rows="2"></textarea>
-            <div class="flex items-center gap-2 mt-4 no-print bg-gray-100 p-2 border">
-                <input type="checkbox" id="rule_ack">
-                <label style="margin-top:0;" for="rule_ack">I acknowledge reviewing this rule with my workgroup.</label>
-            </div>
+            <h2>Group Photo</h2>
+            <input type="file" accept="image/*" capture="environment" id="group_photo_input" class="no-print p-2">
+            <img id="group_photo_preview" class="hidden" alt="Group Photo">
         </div>
 
         <!-- TOP / Rule 42 -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Rule 42 Confirmations / TOPs</h2>
-            <div id="top-container"></div>
+            <h2>Rule 42 Confirmations / TOPs</h2>
+            <div id="top-container" class="grid-layout"></div>
             <button type="button" class="btn btn-gray no-print" onclick="addTOP()">+ Add Document</button>
-        </div>
-
-        <!-- Safe Work Plan -->
-        <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Safe Work Plan / Risk Assessment</h2>
-            <div id="swp-container"></div>
-            <button type="button" class="btn btn-gray no-print" onclick="addSWPRow()">+ Add Task / Hazard</button>
-        </div>
-
-        <!-- Safety Watch -->
-        <div class="section-card" id="safety-watch-section">
-            <div class="flex justify-between items-center border-b pb-2 mb-2">
-                <h2 class="text-lg font-bold text-blue-900">Safety Watch / Lone Worker</h2>
-                <div class="flex items-center gap-2 no-print">
-                    <span class="text-sm font-bold text-gray-500">Include?</span>
-                    <input type="checkbox" id="safety_toggle" checked onchange="toggleSafetyWatch()">
-                </div>
-            </div>
-            <div id="safety-watch-content" class="grid-layout">
-                <div><label>Designated Safety Watch:</label><input type="text"></div>
-                <div><label>Position of Safety Watch:</label><input type="text"></div>
-                <div><label>Maximum Zone Train Speed:</label><input type="text"></div>
-                <div><label>Minimum Required Sight Distance:</label><input type="text"></div>
-                <div class="col-span-1 sm:col-span-2"><label>Statement of On-Track Safety Completed?</label>
-                    <select><option>Yes</option><option>No (Lone Worker not permitted)</option></select>
-                </div>
-            </div>
         </div>
 
         <!-- Attendance -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-blue-900 mb-2">Job Briefing Attendance</h2>
-            <div id="attendance-container"></div>
+            <h2>Job Briefing Attendance</h2>
+            <div id="attendance-container" class="grid-layout"></div>
             <button type="button" class="btn btn-gray no-print" onclick="addAttendanceRow()">+ Add Attendee</button>
         </div>
     </form>
 
-    <!-- Floating PDF Button -->
-    <div class="fixed bottom-4 left-4 right-4 no-print z-40">
-        <button type="button" class="btn btn-blue text-lg py-4 shadow-lg" onclick="generatePDF()">Create PDF / Print</button>
+    <div class="fixed bottom-0 left-0 right-0 p-4 bg-white border-t no-print z-40">
+        <button type="button" class="btn shadow-lg" onclick="window.print()">Create PDF / Print</button>
     </div>
 
     <!-- Signature Modal -->
     <div id="signature-modal" class="no-print">
         <div id="signature-pad-container">
-            <h3 class="text-lg font-bold mb-4 text-blue-900 border-b pb-2">Please Sign Below</h3>
-            <canvas id="sig-canvas" width="400" height="200" style="border: 2px dashed #9ca3af; background: #f3f4f6; width: 100%; touch-action: none;"></canvas>
-            <div class="flex gap-2 mt-4">
-                <button type="button" class="btn btn-gray" onclick="closeSignaturePad()">Cancel</button>
+            <h3 class="font-bold mb-2">Sign Below</h3>
+            <canvas id="sig-canvas" width="350" height="150" style="border:1px solid #000; width:100%; background:#fff; touch-action:none;"></canvas>
+            <div class="grid-2 mt-2">
+                <button type="button" class="btn btn-gray" onclick="document.getElementById('signature-modal').style.display='none'">Cancel</button>
                 <button type="button" class="btn btn-red" onclick="sigPad.clear()">Clear</button>
-                <button type="button" class="btn btn-blue" onclick="saveSignature()">Save</button>
+                <button type="button" class="btn col-span-2" onclick="saveSignature()">Save</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Setup Date
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('datetime').value = now.toISOString().slice(0,16);
 
-        // Geolocation Data with Timeout and Fallbacks
+        // Geolocation & APIs
         const hospField = document.getElementById('hospital');
         const weatherField = document.getElementById('weather');
 
@@ -193,52 +150,34 @@
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
                 
-                // Weather
-                try {
-                    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
-                    const wData = await wRes.json();
-                    weatherField.value = `Temp: ${wData.current_weather.temperature}°C, Wind: ${wData.current_weather.windspeed} km/h`;
-                } catch(e) {
-                    weatherField.value = "Weather service unavailable. Please type manually.";
-                }
+                fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+                    .then(r => r.json()).then(d => { weatherField.value = `${d.current_weather.temperature}°C`; })
+                    .catch(() => { weatherField.value = "Manual Entry"; });
 
-                // Hospital
-                try {
-                    const query = `[out:json];nwr(around:30000,${lat},${lon})[amenity=hospital];out center 1;`;
-                    const hRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
-                    const hData = await hRes.json();
-                    if(hData.elements.length > 0) {
-                        const el = hData.elements[0];
-                        hospField.value = `${el.tags.name || 'Local Hospital'} (Lat: ${el.lat || el.center.lat}, Lon: ${el.lon || el.center.lon})`;
-                    } else {
-                        hospField.value = `No hospital found within 30km. Please type manually.`;
-                    }
-                } catch(e) {
-                    hospField.value = "Map service unavailable. Please type manually.";
-                }
-            }, (err) => {
-                hospField.value = "Location access denied or unavailable. Please type manually.";
-                weatherField.value = "Location access denied or unavailable. Please type manually.";
-            }, { timeout: 7000 }); // 7 second timeout so it doesn't hang forever
-        } else {
-            hospField.value = "GPS not supported on this device. Please type manually.";
-            weatherField.value = "GPS not supported on this device. Please type manually.";
+                // Optimized Overpass query for speed
+                const query = `[out:json][timeout:5];(node["amenity"="hospital"](around:30000,${lat},${lon});way["amenity"="hospital"](around:30000,${lat},${lon}););out center 1;`;
+                fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`)
+                    .then(r => r.json()).then(d => {
+                        if(d.elements.length > 0) hospField.value = `${d.elements[0].tags.name || 'Hospital'} (${d.elements[0].lat || d.elements[0].center.lat}, ${d.elements[0].lon || d.elements[0].center.lon})`;
+                        else hospField.value = `None within 30km. Type manually.`;
+                    }).catch(() => { hospField.value = "API Timeout. Type manually."; });
+            }, () => { hospField.value = "GPS Denied."; weatherField.value = "GPS Denied."; }, { timeout: 5000 });
         }
 
-        // Group Photo Logic
-        document.getElementById('group_photo_input').addEventListener('change', function(e) {
-            if(e.target.files && e.target.files[0]) {
+        // Image Handling
+        function handleImage(input, imgId) {
+            if(input.files && input.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    const img = document.getElementById('group_photo_preview');
-                    img.src = event.target.result;
+                reader.onload = e => {
+                    const img = document.getElementById(imgId);
+                    img.src = e.target.result;
                     img.classList.remove('hidden');
-                }
-                reader.readAsDataURL(e.target.files[0]);
+                };
+                reader.readAsDataURL(input.files[0]);
             }
-        });
+        }
+        document.getElementById('group_photo_input').addEventListener('change', function() { handleImage(this, 'group_photo_preview'); });
 
-        // Radio Fields
         function updateRadioFields() {
             const val = document.getElementById('location_preset').value;
             if(!val) return;
@@ -247,104 +186,36 @@
             document.getElementById('r_rtc').value = data.rtc;
             document.getElementById('r_tone').value = data.tone;
             document.getElementById('r_emerg').value = data.emerg;
-            document.getElementById('r_dc').value = data.dc;
         }
 
-        // Rule DB
-        const rulesDB = [
-            { rule: "Rule 112: Securing Equipment", tldr: "Always test handbrakes. Ensure equipment is properly secured." },
-            { rule: "Rule 42: Planned Protection", tldr: "Ensure limits are exact. Do not enter limits without permission." },
-            { rule: "Rule 14: Engine Whistle Signals", tldr: "Sound whistle appropriately at crossings and when workers are nearby." },
-            { rule: "Rule 104: Hand Operated Switches", tldr: "Always restore and lock switches to normal position after use." },
-            { rule: "Rule 136: Radio Monitoring", tldr: "Stand-by channel must be monitored at all times." },
-            { rule: "Rule 26: Blue Signal Protection", tldr: "Never couple to or move equipment protected by a blue signal." },
-            { rule: "Rule 842: Protection of Track Work", tldr: "Confirm all routing arrangements and stop signals are placed." }
-        ];
-        const dayIndex = new Date().getDay();
-        document.getElementById('rule_of_day').value = rulesDB[dayIndex].rule;
-        document.getElementById('rule_tldr').value = rulesDB[dayIndex].tldr;
-
-        // TOP Logic
         let topCount = 0;
         function addTOP() {
             topCount++;
             const id = `top_${topCount}`;
-            const html = `
-                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 relative" style="page-break-inside: avoid; break-inside: avoid;">
-                    <div class="flex justify-between items-center mb-2 no-print">
-                        <span class="font-bold text-gray-700">TOP / Rule 42 Document</span>
-                        <button type="button" class="text-red-600 font-bold px-2 py-1 border border-red-600 rounded" onclick="cancelTOP('${id}')">Void</button>
-                    </div>
-                    <div class="grid-layout mb-2">
-                        <div><label>Authority / Rule No:</label><input type="text"></div>
-                        <div><label>Limits (From / To):</label><input type="text"></div>
-                    </div>
-                    <label class="no-print mt-2 text-sm">Take Photo of Document:</label>
-                    <input type="file" accept="image/*" capture="environment" class="no-print bg-white" onchange="previewTOP(this, '${id}')">
-                    <img id="img_${id}" class="mt-2 rounded border hidden w-full h-auto" style="max-height: 400px; object-fit: contain;">
+            const html = `<div id="${id}" class="col-span-2 p-2" style="background:#fff;">
+                <div class="grid-2">
+                    <div><label>Auth No:</label><input type="text"></div>
+                    <div><label>Limits:</label><input type="text"></div>
                 </div>
-            `;
+                <input type="file" accept="image/*" capture="environment" class="no-print mt-2" onchange="handleImage(this, 'img_${id}')">
+                <img id="img_${id}" class="hidden w-full mt-2">
+            </div>`;
             document.getElementById('top-container').insertAdjacentHTML('beforeend', html);
         }
-        
-        function cancelTOP(id) {
-            const el = document.getElementById(id);
-            el.classList.contains('cancelled-top') ? el.classList.remove('cancelled-top') : el.classList.add('cancelled-top');
-        }
-        
-        function previewTOP(input, id) {
-            if(input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.getElementById(`img_${id}`);
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
 
-        // SWP Logic
-        function addSWPRow() {
-            const html = `
-                <div class="grid-layout p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid; break-inside: avoid;">
-                    <div><label>Task / Activity:</label><input type="text"></div>
-                    <div><label>Hazard / Risk:</label><input type="text"></div>
-                    <div class="col-span-1 sm:col-span-2"><label>Control Measure:</label><input type="text"></div>
-                </div>`;
-            document.getElementById('swp-container').insertAdjacentHTML('beforeend', html);
-        }
-
-        // Safety Watch Toggle
-        function toggleSafetyWatch() {
-            const isChecked = document.getElementById('safety_toggle').checked;
-            const content = document.getElementById('safety-watch-content');
-            const section = document.getElementById('safety-watch-section');
-            if(isChecked) {
-                content.style.display = 'grid';
-                section.classList.remove('no-print');
-            } else {
-                content.style.display = 'none';
-                section.classList.add('no-print');
-            }
-        }
-
-        // Signature Pad Logic
         const canvas = document.getElementById('sig-canvas');
-        const sigPad = new SignaturePad(canvas, { backgroundColor: 'rgb(243, 244, 246)' });
+        const sigPad = new SignaturePad(canvas);
         let currentSigImg = null;
 
         function addAttendanceRow() {
             const id = 'sig_' + Math.random().toString(36).substr(2, 9);
-            const html = `
-                <div class="flex items-center gap-2 p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid; break-inside: avoid;">
-                    <div class="flex-1"><label style="margin-top:0;">Name:</label><input type="text"></div>
-                    <div class="flex-1">
-                        <label style="margin-top:0;">Signature:</label>
-                        <button type="button" class="btn btn-blue py-2 mt-1 no-print" onclick="openSignaturePad('${id}')">Sign Here</button>
-                        <img id="${id}" class="h-12 hidden border-b border-black w-full object-contain" alt="Signature">
-                    </div>
-                </div>`;
+            const html = `<div class="col-span-2 grid-2" style="background:#fff;">
+                <div><label>Name:</label><input type="text"></div>
+                <div class="items-center"><label class="mr-2">Sign:</label>
+                    <button type="button" class="btn-gray px-2 py-1 no-print text-sm" onclick="openSignaturePad('${id}')">Sign</button>
+                    <img id="${id}" class="hidden h-10 border-b border-black">
+                </div>
+            </div>`;
             document.getElementById('attendance-container').insertAdjacentHTML('beforeend', html);
         }
 
@@ -354,45 +225,16 @@
             sigPad.clear();
         }
 
-        function closeSignaturePad() {
-            document.getElementById('signature-modal').style.display = 'none';
-        }
-
         function saveSignature() {
-            if (sigPad.isEmpty()) return alert("Please provide a signature.");
+            if (sigPad.isEmpty()) return;
             currentSigImg.src = sigPad.toDataURL();
             currentSigImg.classList.remove('hidden');
             currentSigImg.previousElementSibling.classList.add('hidden');
-            closeSignaturePad();
+            document.getElementById('signature-modal').style.display = 'none';
         }
 
-        // Initialize rows
-        addSWPRow();
-        addAttendanceRow();
         addTOP();
-
-        // Native PDF Generation
-        function generatePDF() {
-            // Temporarily hide voided TOPs
-            const cancelled = document.querySelectorAll('.cancelled-top');
-            cancelled.forEach(el => el.style.display = 'none');
-            
-            // Expand textareas to show all text during print
-            const textareas = document.querySelectorAll('textarea');
-            textareas.forEach(ta => {
-                ta.style.height = ta.scrollHeight + 'px';
-            });
-
-            // Trigger the native print/Save as PDF menu
-            window.print();
-
-            // Restore voided TOPs and textareas
-            setTimeout(() => {
-                cancelled.forEach(el => el.style.display = 'block');
-                textareas.forEach(ta => ta.style.height = 'auto');
-            }, 1000);
-        }
+        addAttendanceRow();
     </script>
 </body>
 </html>
-
