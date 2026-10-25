@@ -5,41 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Job Briefing">
     <title>PNR Job Briefing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <style>
-        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: #f3f4f6; font-family: Arial, sans-serif; transition: background 0.3s; }
         .section-card { background: white; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: #f9fafb; font-size: 16px; margin-top: 0.25rem; }
-        input[type="checkbox"] { width: auto; width: 1.5rem; height: 1.5rem; }
-        label { display: block; font-weight: 600; color: #374151; font-size: 0.875rem; margin-top: 0.75rem; }
+        input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
+        label { display: block; font-weight: bold; color: #374151; font-size: 0.875rem; margin-top: 0.75rem; }
+        
         .grid-layout { display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
         @media (min-width: 640px) { .grid-layout { grid-template-columns: 1fr 1fr; } }
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: 600; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; }
+        
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: bold; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; }
         .btn-blue { background-color: #003366; color: white; }
         .btn-red { background-color: #ef4444; color: white; }
         .btn-gray { background-color: #e5e7eb; color: #374151; }
         
+        /* Fixed Signature Pad */
         #signature-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; }
         #signature-pad-container { background: white; padding: 1rem; border-radius: 0.5rem; width: 95%; max-width: 500px; }
-        canvas { border: 1px solid #d1d5db; border-radius: 0.5rem; width: 100%; background: #f9fafb; touch-action: none; }
+        #sig-canvas { border: 2px dashed #9ca3af; border-radius: 0.5rem; width: 100%; height: 200px !important; background: #f9fafb; touch-action: none; }
 
-        .cancelled-top { opacity: 0.5; position: relative; }
-        .cancelled-top::after { content: 'CANCELLED'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 3rem; color: red; font-weight: bold; opacity: 0.4; pointer-events: none; }
+        .cancelled-top { opacity: 0.4; position: relative; }
+        .cancelled-top::after { content: 'CANCELLED'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 3rem; color: red; font-weight: bold; border: 4px solid red; padding: 10px; pointer-events: none; }
 
-        @media print {
-            .no-print { display: none !important; }
-            .cancelled-top { display: none !important; }
-            body { background: white; }
-            .section-card { box-shadow: none; padding: 0.5rem; border: 1px solid #e5e7eb; page-break-inside: avoid; }
-            input, textarea, select { border: none; background: transparent; padding: 0; }
-        }
+        /* Strict PDF Document Formatting */
+        body.pdf-mode { background-color: white; padding: 0; }
+        .pdf-mode .section-card { box-shadow: none; border: 2px solid #1e293b; padding: 0.75rem; border-radius: 0; margin-bottom: 0.5rem; page-break-inside: avoid; }
+        .pdf-mode input, .pdf-mode textarea, .pdf-mode select { border: none; border-bottom: 1px solid #000; background: transparent; padding: 0.25rem 0; border-radius: 0; resize: none; color: #000; }
+        .pdf-mode label { color: #000; margin-top: 0.25rem; font-size: 0.8rem; }
+        .pdf-mode h2 { font-size: 1.1rem; border-bottom: 2px solid #003366; padding-bottom: 0.25rem; margin-bottom: 0.5rem; }
+        .pdf-mode .no-print { display: none !important; }
+        .pdf-mode .fixed { display: none !important; }
     </style>
 </head>
 <body class="p-2 sm:p-4 pb-24 text-gray-800" id="app-container">
 
-    <div class="flex items-
+    <div class="flex items-center justify-between mb-4 bg-white p-4 rounded-xl shadow-sm no-print-bg border-b-4 border-[#003366]">
+        <svg viewBox="0 0 250 80" class="h-14 w-auto">
+            <g transform="translate(0, 10)">
+                <path d="M0,0 L12,0 L12,50 L0,50 Z" fill="#3B5B96" />
+                <path d="M16,0 L50,0 C65,0 70,10 65,25 C60,40 50,50 35,50 L16,50 Z" fill="#3B5B96" />
+                <path d="M16,10 L30,50 L50,50 C60,35 60,15 45,0 L35,0 Z" fill="#ffffff" />
+                <text x="
