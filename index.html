@@ -41,9 +41,12 @@
             h2 { background-color: #a4bde6 !important; color: #000 !important; font-size: 10pt; font-weight: bold; text-align: center; border: 1px solid #000; padding: 3px; margin: 0; }
             
             .print-table { display: flex; flex-direction: column; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px solid #000; }
-            .print-row { display: flex; border-bottom: 1px solid #000; background-color: #eaeff7 !important; }
+            
+            /* FORCE HORIZONTAL ROW IN PDF (Fixes the iPhone stacking bug) */
+            .print-row { display: flex !important; flex-direction: row !important; border-bottom: 1px solid #000; background-color: #eaeff7 !important; }
             .print-row:last-child { border-bottom: none; }
-            .print-cell { flex: 1; border-right: 1px solid #000; padding: 3px 5px; display: flex; flex-direction: column; justify-content: center; }
+            
+            .print-cell { flex: 1; border-right: 1px solid #000; padding: 3px 5px; display: flex !important; flex-direction: column !important; justify-content: center; }
             .print-cell:last-child { border-right: none; }
             
             .no-print { display: none !important; }
