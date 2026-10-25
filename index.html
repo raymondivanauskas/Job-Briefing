@@ -48,7 +48,7 @@
             
             .no-print { display: none !important; }
             
-            .pdf-text { font-size: 10pt; color: #000; font-family: "Courier New", Courier, monospace; font-weight: bold; word-wrap: break-word; white-space: pre-wrap; display: block; margin-top: 2px; }
+            .pdf-text { font-size: 10pt; color: #000; font-family: "Helvetica", Arial, sans-serif; font-weight: bold; word-wrap: break-word; white-space: pre-wrap; display: block; margin-top: 2px; }
             label { font-size: 8pt; color: #333 !important; font-weight: normal; margin: 0; }
             
             img { max-height: 350px; display: block; margin: 5px auto; border: 2px solid #000; page-break-inside: avoid; }
@@ -87,10 +87,10 @@
         <!-- EMERGENCY INFO -->
         <div class="section-card">
             <h2>Emergency Information</h2>
-            <button type="button" class="btn btn-green no-print mb-2" onclick="fetchGPS()">📍 Tap to Auto-Fill Nearest ER & Weather</button>
+            <button type="button" class="btn btn-green no-print mb-2" onclick="fetchGPS()">📍 Tap to Auto-Fill Nearest Hospital & Weather</button>
             <div class="print-table">
                 <div class="print-row flex-col">
-                    <div class="print-cell"><label>Nearest Hospital with ER & Address:</label><textarea id="hospital" rows="1"></textarea></div>
+                    <div class="print-cell"><label>Nearest Hospital & Address:</label><textarea id="hospital" rows="1"></textarea></div>
                 </div>
                 <div class="print-row flex-col">
                     <div class="print-cell"><label>Weather Condition:</label><input type="text" id="weather"></div>
@@ -202,17 +202,7 @@
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('datetime').value = now.toISOString().slice(0,16);
 
-        // Haversine Distance Calculator (Direct line math for accurate closest-hospital finding)
-        function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
-            var R = 6371; // Radius of the earth in km
-            var dLat = (lat2 - lat1) * Math.PI / 180;
-            var dLon = (lon2 - lon1) * Math.PI / 180; 
-            var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2); 
-            var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-            return R * c; // Distance in km
-        }
-
-        // PERFECTED ER/HOSPITAL LOCATOR
+        // MANUAL GPS FETCH (Using Nominatim for robust, crash-free hospital search)
         function fetchGPS() {
             const hBtn = document.getElementById('hospital');
             const wBtn = document.getElementById('weather');
@@ -231,32 +221,21 @@
                     } catch(e) { wBtn.value = "Weather Failed. Please type manually."; }
 
                     try {
-                        // Massive 50km radius search, strictly looking for emergency=yes
-                        const query = `[out:json][timeout:10];(node["amenity"="hospital"]["emergency"="yes"](around:50000,${lat},${lon});way["amenity"="hospital"]["emergency"="yes"](around:50000,${lat},${lon}););out center;`;
-                        const hRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+                        // Using OSM Nominatim - Much more stable for simple address/facility lookups
+                        const query = `https://nominatim.openstreetmap.org/search?format=json&q=hospital&lat=${lat}&lon=${lon}&limit=1`;
+                        const hRes = await fetch(query);
                         const hData = await hRes.json();
                         
-                        if(hData.elements.length > 0) {
-                            let closest = null;
-                            let minDistance = Infinity;
+                        if(hData.length > 0) {
+                            const hospitalInfo = hData[0];
+                            const hospName = hospitalInfo.name || 'Local Hospital';
+                            // Clean up the massive address string Nominatim returns
+                            const addressParts = hospitalInfo.display_name.split(', ');
+                            const cleanAddress = addressParts.slice(0, 3).join(', ');
                             
-                            // Loop through results to mathematically find the absolute closest ER
-                            for(let el of hData.elements) {
-                                let elLat = el.lat || el.center.lat;
-                                let elLon = el.lon || el.center.lon;
-                                let dist = getDistanceFromLatLonInKm(lat, lon, elLat, elLon);
-                                if(dist < minDistance) {
-                                    minDistance = dist;
-                                    closest = el;
-                                }
-                            }
-                            
-                            let hospName = closest.tags.name || 'Emergency Hospital';
-                            let address = closest.tags['addr:street'] ? `${closest.tags['addr:housenumber']||''} ${closest.tags['addr:street']}, ${closest.tags['addr:city']||''}` : `Lat: ${closest.lat || closest.center.lat}, Lon: ${closest.lon || closest.center.lon}`;
-                            
-                            hBtn.value = `${hospName} (${minDistance.toFixed(1)} km away)\n${address}`;
+                            hBtn.value = `${hospName}\n${cleanAddress}`;
                         } else {
-                            hBtn.value = `No 24/7 ER hospital found within 50km. Type manually.`;
+                            hBtn.value = `No hospital found nearby. Type manually.`;
                         }
                     } catch(e) { hBtn.value = "Map search failed. Please type manually."; }
                 }, () => { 
@@ -373,13 +352,11 @@
             document.getElementById('r_stdby').value = data.stdby;
             document.getElementById('r_rtc').value = data.rtc;
             document.getElementById('r_tone').value = data.tone;
-            // Append DC number to Tone if it exists
             const rtcVal = data.dc ? `${data.tone} (DC ${data.dc})` : data.tone;
             document.getElementById('r_tone').value = rtcVal;
             document.getElementById('r_emerg').value = data.emerg;
         }
 
-        // Rules Data
         const rulesDB = [
             { rule: "Rule 112: Securing Equipment", tldr: "Always test handbrakes. Ensure equipment is properly secured." },
             { rule: "Rule 42: Planned Protection", tldr: "Ensure limits are exact. Do not enter limits without permission." },
@@ -398,14 +375,22 @@
         addSWPRow(); addSWPRow(); addSWPRow();
         addAttendanceRow(); addAttendanceRow();
 
-        // CROSS-PLATFORM NATIVE PDF GENERATION SCRIPT
+        // NATIVE PDF GENERATION SCRIPT WITH DATE FIX
         function generatePDF() {
             const inputs = document.querySelectorAll('input:not([type="file"]), textarea, select');
             
             inputs.forEach(el => {
                 const span = document.createElement('span');
                 span.className = 'pdf-text';
-                span.textContent = el.options ? el.options[el.selectedIndex].text : el.value;
+                
+                // Fix the weird "T" in the date time for the PDF
+                if (el.type === 'datetime-local' && el.value) {
+                    const dateObj = new Date(el.value);
+                    span.textContent = dateObj.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+                } else {
+                    span.textContent = el.options ? el.options[el.selectedIndex].text : el.value;
+                }
+                
                 if (!span.textContent) span.innerHTML = '&nbsp;'; 
                 
                 el.parentNode.insertBefore(span, el);
