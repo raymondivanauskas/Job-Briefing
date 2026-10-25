@@ -8,10 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <style>
-        /* MOBILE APP STYLING */
-        body { background-color: #f3f4f6; font-family: Arial, sans-serif; color: #111827; }
+        /* MOBILE APP STYLING (Universal) */
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; color: #111827; }
         .section-card { background: white; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d1d5db; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #f9fafb; font-size: 16px; margin-top: 0.25rem; color: #000; }
+        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #f9fafb; font-size: 16px; margin-top: 0.25rem; color: #000; -webkit-appearance: none; }
         .readonly-field { background: #e5e7eb; cursor: not-allowed; font-weight: bold; text-align: center; }
         label { display: block; font-weight: bold; color: #374151; font-size: 0.9rem; margin-top: 0.75rem; }
         
@@ -27,29 +27,23 @@
         /* STRICT PHYSICAL PAPER REPLICA FOR PDF */
         @media print {
             @page { margin: 0.25in; size: letter portrait; }
-            body { background: white !important; padding: 0 !important; font-size: 9pt; font-family: "Helvetica", Arial, sans-serif; }
+            body { background: white !important; padding: 0 !important; font-size: 9pt; font-family: "Helvetica", Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             
-            /* Remove mobile card look, emulate paper tables */
             .section-card { border: none !important; padding: 0 !important; margin-bottom: 8px !important; border-radius: 0 !important; box-shadow: none !important; page-break-inside: avoid; }
             
-            /* PNR Blue Headers */
-            h2 { background-color: #a4bde6 !important; color: #000 !important; font-size: 10pt; font-weight: bold; text-align: center; border: 1px solid #000; padding: 3px; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            h2 { background-color: #a4bde6 !important; color: #000 !important; font-size: 10pt; font-weight: bold; text-align: center; border: 1px solid #000; padding: 3px; margin: 0; }
             
-            /* Grid system to draw strict black borders like original form */
             .print-table { display: flex; flex-direction: column; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px solid #000; }
-            .print-row { display: flex; border-bottom: 1px solid #000; background-color: #eaeff7 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-row { display: flex; border-bottom: 1px solid #000; background-color: #eaeff7 !important; }
             .print-row:last-child { border-bottom: none; }
             .print-cell { flex: 1; border-right: 1px solid #000; padding: 3px 5px; display: flex; flex-direction: column; justify-content: center; }
             .print-cell:last-child { border-right: none; }
             
-            /* Hide UI controls */
             .no-print { display: none !important; }
             
-            /* The converted text spans */
             .pdf-text { font-size: 10pt; color: #000; font-family: "Courier New", Courier, monospace; font-weight: bold; word-wrap: break-word; white-space: pre-wrap; display: block; margin-top: 2px; }
             label { font-size: 8pt; color: #333 !important; font-weight: normal; margin: 0; }
             
-            /* Images */
             img { max-height: 350px; display: block; margin: 5px auto; border: 2px solid #000; page-break-inside: avoid; }
         }
     </style>
@@ -104,9 +98,13 @@
             <h2>Radio / Phone Information</h2>
             <select id="location_preset" class="no-print mb-2 p-2 border border-gray-400 bg-white" onchange="updateRadioFields()">
                 <option value="">-- Select location to auto-fill radio channels --</option>
-                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*31","emerg":"*30","dc":"#3"}'>Alexandria Sub (Mile 0.4 - 23.0)</option>
-                <option value='{"stdby":"52-05","rtc":"85-85","tone":"*41","emerg":"*40","dc":"#4"}'>Alexandria Sub (Mile 23.0 - 61.0)</option>
-                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*11","emerg":"*10","dc":"#1"}'>Smiths Falls</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*31","emerg":"*30","dc":"#3"}'>Alexandria Sub (Mile 0.4 - 23.0) Ste-Justine Tower</option>
+                <option value='{"stdby":"52-05","rtc":"85-85","tone":"*41","emerg":"*40","dc":"#4"}'>Alexandria Sub (Mile 23.0 - 61.0) Moose Creek Tower</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Alexandria Sub (Mile 61.0 - 76.43) Ottawa Tower</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Beachburg Sub (Mile 0.3 - 6.0) Ottawa Tower</option>
+                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*11","emerg":"*10","dc":"#1"}'>Smiths Falls (Mile 0.0 - 34.4) Dwyer Hill Tower</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*51","emerg":"*50","dc":"#5"}'>Brockville Sub (Mile 0.0 - 27.6) Bellamy Tower</option>
+                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*61","emerg":"*60","dc":"#6"}'>At Brockville Station (Station Tower)</option>
             </select>
             <div class="print-table">
                 <div class="print-row flex-col sm:flex-row">
@@ -144,7 +142,6 @@
         <div class="section-card">
             <h2>Safe Work Plan / Field Level Risk Assessment</h2>
             <div class="print-table" id="swp-container">
-                <!-- Headers for PDF -->
                 <div class="print-row font-bold text-center bg-gray-300 hidden sm:flex print:flex" style="background-color: #d1d5db !important;">
                     <div class="print-cell w-1/3">Task / Activity</div>
                     <div class="print-cell w-1/3">Hazard / Risk</div>
@@ -168,7 +165,7 @@
         <div class="section-card">
             <h2>Group Photo</h2>
             <input type="file" accept="image/*" capture="environment" class="no-print p-2 w-full bg-white border mt-2" onchange="previewImg(this, 'group_photo_preview')">
-            <img id="group_photo_preview" class="hidden w-full max-h-80 object-contain mt-2" alt="Group Photo">
+            <img id="group_photo_preview" class="hidden w-full max-h-80 object-contain mt-2 border-2 border-black" alt="Group Photo">
         </div>
     </form>
 
@@ -181,7 +178,7 @@
     <div id="signature-modal" class="no-print">
         <div id="signature-pad-container">
             <h3 class="text-lg font-bold mb-2 text-center border-b pb-2">Sign Below</h3>
-            <canvas id="sig-canvas" width="400" height="200" style="border:2px dashed #6b7280; width:100%; background:#f9fafb; touch-action:none;"></canvas>
+            <canvas id="sig-canvas" width="400" height="200" style="border:2px dashed #6b7280; width:100%; background:#f9fafb; touch-action: none;"></canvas>
             <div class="flex gap-2 mt-4">
                 <button type="button" class="btn btn-gray m-0" onclick="document.getElementById('signature-modal').style.display='none'">Cancel</button>
                 <button type="button" class="btn btn-red m-0" onclick="sigPad.clear()">Clear</button>
@@ -196,7 +193,7 @@
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('datetime').value = now.toISOString().slice(0,16);
 
-        // MANUAL GPS FETCH (Fixes the freezing issue)
+        // MANUAL GPS FETCH (Cross-browser compliant)
         function fetchGPS() {
             const hBtn = document.getElementById('hospital');
             const wBtn = document.getElementById('weather');
@@ -215,13 +212,13 @@
                     } catch(e) { wBtn.value = "Weather Failed."; }
 
                     try {
-                        const query = `[out:json][timeout:5];(node["amenity"="hospital"](around:30000,${lat},${lon});way["amenity"="hospital"](around:30000,${lat},${lon}););out center 1;`;
+                        const query = `[out:json][timeout:5];(nwr["amenity"="hospital"]["emergency"="yes"](around:30000,${lat},${lon}););out center 1;`;
                         const hRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
                         const hData = await hRes.json();
                         if(hData.elements.length > 0) {
                             hBtn.value = `${hData.elements[0].tags.name || 'Hospital'} (Lat: ${hData.elements[0].lat || hData.elements[0].center.lat}, Lon: ${hData.elements[0].lon || hData.elements[0].center.lon})`;
                         } else {
-                            hBtn.value = `No hospital within 30km. Type manually.`;
+                            hBtn.value = `No 24/7 ER hospital found within 30km. Type manually.`;
                         }
                     } catch(e) { hBtn.value = "Map search failed."; }
                 }, () => { 
@@ -246,26 +243,26 @@
             }
         }
 
-        // TOP Logic (Photo Only)
+        // TOP Logic
         let topCount = 0;
         function addTOP() {
             topCount++;
             const id = `top_img_${topCount}`;
             const html = `
-                <div class="mb-4 bg-gray-50 border p-2 text-center no-print-bg">
+                <div class="mb-4 bg-gray-50 border p-2 text-center no-print-bg relative z-10">
                     <label class="no-print">Protection Document #${topCount}:</label>
                     <input type="file" accept="image/*" capture="environment" class="no-print w-full p-2 bg-white border" onchange="previewImg(this, '${id}')">
-                    <button type="button" class="btn btn-red mt-2 no-print" onclick="this.parentElement.remove()">Remove</button>
+                    <button type="button" class="btn btn-red mt-2 no-print" onclick="this.parentElement.remove()">Remove Document</button>
                     <img id="${id}" class="hidden w-full mt-2 border-2 border-black page-break-avoid">
                 </div>`;
             document.getElementById('top-container').insertAdjacentHTML('beforeend', html);
         }
 
-        // Risk Assessment (3-Column Layout)
+        // Risk Assessment
         function addSWPRow() {
             const html = `
-                <div class="print-row flex-col sm:flex-row relative">
-                    <button type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-6 h-6 no-print font-bold text-sm" onclick="this.parentElement.remove()">X</button>
+                <div class="print-row flex-col sm:flex-row relative z-10">
+                    <button type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-6 h-6 no-print font-bold text-sm z-20" onclick="this.parentElement.remove()">X</button>
                     <div class="print-cell sm:w-1/3"><label class="sm:hidden no-print">Task:</label><textarea rows="2"></textarea></div>
                     <div class="print-cell sm:w-1/3"><label class="sm:hidden no-print">Hazard:</label><textarea rows="2"></textarea></div>
                     <div class="print-cell sm:w-1/3"><label class="sm:hidden no-print">Control Measure:</label><textarea rows="2"></textarea></div>
@@ -286,8 +283,8 @@
         function addAttendanceRow() {
             const id = 'sig_' + Math.random().toString(36).substr(2, 9);
             const html = `
-                <div class="print-row flex-col sm:flex-row relative">
-                    <button type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-6 h-6 no-print font-bold text-sm" onclick="removeAttendance(this)">X</button>
+                <div class="print-row flex-col sm:flex-row relative z-10">
+                    <button type="button" class="absolute -right-2 -top-2 bg-red-500 text-white rounded-full w-6 h-6 no-print font-bold text-sm z-20" onclick="removeAttendance(this)">X</button>
                     <div class="print-cell sm:w-1/2"><label>Name:</label><input type="text"></div>
                     <div class="print-cell sm:w-1/2">
                         <label>Signature:</label>
@@ -313,12 +310,12 @@
             if (sigPad.isEmpty()) return alert("Please sign before saving.");
             currentSigImg.src = sigPad.toDataURL();
             currentSigImg.classList.remove('hidden');
-            currentSigImg.previousElementSibling.classList.add('hidden'); // Hide the blue button
+            currentSigImg.previousElementSibling.classList.add('hidden'); 
             document.getElementById('signature-modal').style.display = 'none';
             updateHeadcount();
         }
 
-        // Rules & Radios Data
+        // Radios Data
         function updateRadioFields() {
             const val = document.getElementById('location_preset').value;
             if(!val) return;
@@ -329,6 +326,7 @@
             document.getElementById('r_emerg').value = data.emerg;
         }
 
+        // Rules Data
         const rulesDB = [
             { rule: "Rule 112: Securing Equipment", tldr: "Always test handbrakes. Ensure equipment is properly secured." },
             { rule: "Rule 42: Planned Protection", tldr: "Ensure limits are exact. Do not enter limits without permission." },
@@ -347,32 +345,30 @@
         addSWPRow(); addSWPRow(); addSWPRow();
         addAttendanceRow(); addAttendanceRow();
 
-        // NATIVE PDF GENERATION SCRIPT (Transforms Inputs to Text to force formatting)
+        // CROSS-PLATFORM NATIVE PDF GENERATION SCRIPT
         function generatePDF() {
-            // Find all input elements
             const inputs = document.querySelectorAll('input:not([type="file"]), textarea, select');
             
-            // Loop through and swap them with pure text spans so Chrome CANNOT render them as gray boxes
             inputs.forEach(el => {
                 const span = document.createElement('span');
                 span.className = 'pdf-text';
-                // Get the value (handle select dropdowns too)
                 span.textContent = el.options ? el.options[el.selectedIndex].text : el.value;
-                if (!span.textContent) span.innerHTML = '&nbsp;'; // Keep spacing if empty
+                if (!span.textContent) span.innerHTML = '&nbsp;'; 
                 
-                // Insert text, hide input
                 el.parentNode.insertBefore(span, el);
                 el.style.display = 'none';
             });
 
-            // Trigger the native OS Print to PDF
-            window.print();
-
-            // Revert everything back to normal mobile app inputs right after
+            // The iOS Safari 300ms Delay Fix: gives the iPhone time to register the DOM change before printing
             setTimeout(() => {
-                document.querySelectorAll('.pdf-text').forEach(el => el.remove());
-                inputs.forEach(el => el.style.display = '');
-            }, 1000);
+                window.print();
+                
+                // Revert after 1.5 seconds so it returns to mobile mode
+                setTimeout(() => {
+                    document.querySelectorAll('.pdf-text').forEach(el => el.remove());
+                    inputs.forEach(el => el.style.display = '');
+                }, 1500);
+            }, 300);
         }
     </script>
 </body>
