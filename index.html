@@ -5,13 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Job Briefing</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <style>
         body { background-color: #f3f4f6; font-family: Arial, sans-serif; }
         .section-card { background: white; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d1d5db; }
-        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #ffffff; font-size: 16px; margin-top: 0.25rem; }
+        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #ffffff; font-size: 16px; margin-top: 0.25rem; color: #000; }
         input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
         label { display: block; font-weight: bold; color: #374151; font-size: 0.9rem; margin-top: 0.75rem; }
         
@@ -29,19 +28,23 @@
         .cancelled-top { opacity: 0.5; position: relative; }
         .cancelled-top::after { content: 'VOID'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: red; font-weight: bold; border: 4px solid red; padding: 5px; pointer-events: none; }
 
-        /* Specific rules for PDF generation to look like a document */
+        /* NATIVE PDF PRINT STYLING */
         @media print {
-            body { background-color: white !important; }
-            .section-card { border: none !important; border-bottom: 2px solid #000 !important; padding: 0.5rem 0 !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; }
-            input, textarea, select { border: none !important; border-bottom: 1px dashed #000 !important; background: transparent !important; padding: 0.25rem 0 !important; border-radius: 0 !important; }
-            .no-print { display: none !important; }
+            @page { margin: 0.5in; }
+            body { background-color: white !important; padding: 0 !important; font-size: 12pt; color: black; }
+            .section-card { border: none !important; padding: 0 !important; margin-bottom: 1.5rem !important; border-radius: 0 !important; box-shadow: none !important; page-break-inside: avoid; break-inside: avoid; }
+            h2 { border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 8px; color: #000 !important; font-size: 14pt; }
+            input, textarea, select { border: none !important; border-bottom: 1px solid #ccc !important; background: transparent !important; padding: 4px 0 !important; margin-top: 0 !important; font-size: 12pt !important; height: auto !important; resize: none; overflow: visible; }
+            label { font-size: 10pt; color: #333 !important; margin-top: 8px; }
+            .no-print, .btn, input[type="file"] { display: none !important; }
             .fixed { display: none !important; }
+            img { max-height: 400px; page-break-inside: avoid; break-inside: avoid; }
         }
     </style>
 </head>
 <body class="p-2 sm:p-4 pb-24 text-gray-900" id="app-container">
 
-    <div class="mb-4 bg-white p-4 rounded shadow-sm border-b-4 border-blue-900">
+    <div class="mb-4 bg-white p-4 rounded shadow-sm border-b-4 border-blue-900 section-card">
         <h1 class="text-2xl font-bold text-gray-800 text-center uppercase">Job Briefing</h1>
     </div>
 
@@ -71,7 +74,7 @@
             <div class="grid-layout">
                 <div class="col-span-1 sm:col-span-2">
                     <label>Nearest Hospital & Address:</label>
-                    <textarea id="hospital" rows="2">Fetching location...</textarea>
+                    <textarea id="hospital" rows="2">Fetching location (Waiting for GPS)...</textarea>
                 </div>
                 <div class="col-span-1 sm:col-span-2">
                     <label>Current Weather Condition:</label>
@@ -159,14 +162,13 @@
 
     <!-- Floating PDF Button -->
     <div class="fixed bottom-4 left-4 right-4 no-print z-40">
-        <button type="button" class="btn btn-blue text-lg py-4 shadow-lg" onclick="generatePDF()">Download as PDF</button>
+        <button type="button" class="btn btn-blue text-lg py-4 shadow-lg" onclick="generatePDF()">Create PDF / Print</button>
     </div>
 
     <!-- Signature Modal -->
     <div id="signature-modal" class="no-print">
         <div id="signature-pad-container">
             <h3 class="text-lg font-bold mb-4 text-blue-900 border-b pb-2">Please Sign Below</h3>
-            <!-- Canvas dimensions hardcoded for mobile stability -->
             <canvas id="sig-canvas" width="400" height="200" style="border: 2px dashed #9ca3af; background: #f3f4f6; width: 100%; touch-action: none;"></canvas>
             <div class="flex gap-2 mt-4">
                 <button type="button" class="btn btn-gray" onclick="closeSignaturePad()">Cancel</button>
@@ -182,30 +184,45 @@
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('datetime').value = now.toISOString().slice(0,16);
 
-        // Geolocation Data
+        // Geolocation Data with Timeout and Fallbacks
+        const hospField = document.getElementById('hospital');
+        const weatherField = document.getElementById('weather');
+
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
+                
+                // Weather
                 try {
                     const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
                     const wData = await wRes.json();
-                    document.getElementById('weather').value = `Temp: ${wData.current_weather.temperature}°C, Wind: ${wData.current_weather.windspeed} km/h`;
-                } catch(e) {}
+                    weatherField.value = `Temp: ${wData.current_weather.temperature}°C, Wind: ${wData.current_weather.windspeed} km/h`;
+                } catch(e) {
+                    weatherField.value = "Weather service unavailable. Please type manually.";
+                }
+
+                // Hospital
                 try {
                     const query = `[out:json];nwr(around:30000,${lat},${lon})[amenity=hospital];out center 1;`;
                     const hRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
                     const hData = await hRes.json();
                     if(hData.elements.length > 0) {
                         const el = hData.elements[0];
-                        document.getElementById('hospital').value = `${el.tags.name || 'Local Hospital'} (Lat: ${el.lat || el.center.lat}, Lon: ${el.lon || el.center.lon})`;
+                        hospField.value = `${el.tags.name || 'Local Hospital'} (Lat: ${el.lat || el.center.lat}, Lon: ${el.lon || el.center.lon})`;
                     } else {
-                        document.getElementById('hospital').value = `No hospital found within 30km.`;
+                        hospField.value = `No hospital found within 30km. Please type manually.`;
                     }
-                } catch(e) {}
+                } catch(e) {
+                    hospField.value = "Map service unavailable. Please type manually.";
+                }
             }, (err) => {
-                document.getElementById('hospital').value = "Location access denied.";
-            });
+                hospField.value = "Location access denied or unavailable. Please type manually.";
+                weatherField.value = "Location access denied or unavailable. Please type manually.";
+            }, { timeout: 7000 }); // 7 second timeout so it doesn't hang forever
+        } else {
+            hospField.value = "GPS not supported on this device. Please type manually.";
+            weatherField.value = "GPS not supported on this device. Please type manually.";
         }
 
         // Group Photo Logic
@@ -253,7 +270,7 @@
             topCount++;
             const id = `top_${topCount}`;
             const html = `
-                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 relative" style="page-break-inside: avoid;">
+                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 relative" style="page-break-inside: avoid; break-inside: avoid;">
                     <div class="flex justify-between items-center mb-2 no-print">
                         <span class="font-bold text-gray-700">TOP / Rule 42 Document</span>
                         <button type="button" class="text-red-600 font-bold px-2 py-1 border border-red-600 rounded" onclick="cancelTOP('${id}')">Void</button>
@@ -290,7 +307,7 @@
         // SWP Logic
         function addSWPRow() {
             const html = `
-                <div class="grid-layout p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid;">
+                <div class="grid-layout p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid; break-inside: avoid;">
                     <div><label>Task / Activity:</label><input type="text"></div>
                     <div><label>Hazard / Risk:</label><input type="text"></div>
                     <div class="col-span-1 sm:col-span-2"><label>Control Measure:</label><input type="text"></div>
@@ -320,7 +337,7 @@
         function addAttendanceRow() {
             const id = 'sig_' + Math.random().toString(36).substr(2, 9);
             const html = `
-                <div class="flex items-center gap-2 p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid;">
+                <div class="flex items-center gap-2 p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid; break-inside: avoid;">
                     <div class="flex-1"><label style="margin-top:0;">Name:</label><input type="text"></div>
                     <div class="flex-1">
                         <label style="margin-top:0;">Signature:</label>
@@ -334,7 +351,6 @@
         function openSignaturePad(imgId) {
             currentSigImg = document.getElementById(imgId);
             document.getElementById('signature-modal').style.display = 'flex';
-            // Clear pad when opening
             sigPad.clear();
         }
 
@@ -355,27 +371,26 @@
         addAttendanceRow();
         addTOP();
 
-        // PDF Generation
+        // Native PDF Generation
         function generatePDF() {
-            // Temporarily hide voided TOPs from print view entirely
+            // Temporarily hide voided TOPs
             const cancelled = document.querySelectorAll('.cancelled-top');
             cancelled.forEach(el => el.style.display = 'none');
-
-            const element = document.getElementById('app-container');
-            const name = document.getElementById('foreman').value || 'Report';
             
-            const opt = {
-                margin:       10,
-                filename:     `Job_Briefing_${name}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
-            };
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Restore voided TOPs to screen after PDF generation
-                cancelled.forEach(el => el.style.display = 'block');
+            // Expand textareas to show all text during print
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(ta => {
+                ta.style.height = ta.scrollHeight + 'px';
             });
+
+            // Trigger the native print/Save as PDF menu
+            window.print();
+
+            // Restore voided TOPs and textareas
+            setTimeout(() => {
+                cancelled.forEach(el => el.style.display = 'block');
+                textareas.forEach(ta => ta.style.height = 'auto');
+            }, 1000);
         }
     </script>
 </body>
