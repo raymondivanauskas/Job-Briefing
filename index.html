@@ -3,64 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>PNR Job Briefing</title>
+    <title>Job Briefing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
     
     <style>
-        body { background-color: #f3f4f6; font-family: Arial, sans-serif; transition: background 0.3s; }
-        .section-card { background: white; border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: #f9fafb; font-size: 16px; margin-top: 0.25rem; }
+        body { background-color: #f3f4f6; font-family: Arial, sans-serif; }
+        .section-card { background: white; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem; border: 1px solid #d1d5db; }
+        input, textarea, select { width: 100%; padding: 0.75rem; border: 1px solid #9ca3af; border-radius: 0.25rem; background: #ffffff; font-size: 16px; margin-top: 0.25rem; }
         input[type="checkbox"] { width: 1.5rem; height: 1.5rem; }
-        label { display: block; font-weight: bold; color: #374151; font-size: 0.875rem; margin-top: 0.75rem; }
+        label { display: block; font-weight: bold; color: #374151; font-size: 0.9rem; margin-top: 0.75rem; }
         
         .grid-layout { display: grid; gap: 0.5rem; grid-template-columns: 1fr; }
         @media (min-width: 640px) { .grid-layout { grid-template-columns: 1fr 1fr; } }
         
-        .btn { padding: 0.75rem 1.5rem; border-radius: 0.5rem; font-weight: bold; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; }
-        .btn-blue { background-color: #003366; color: white; }
-        .btn-red { background-color: #ef4444; color: white; }
-        .btn-gray { background-color: #e5e7eb; color: #374151; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 0.25rem; font-weight: bold; text-align: center; cursor: pointer; display: block; width: 100%; margin-top: 0.5rem; }
+        .btn-blue { background-color: #1e3a8a; color: white; }
+        .btn-red { background-color: #dc2626; color: white; }
+        .btn-gray { background-color: #d1d5db; color: #111827; }
         
-        /* Fixed Signature Pad */
-        #signature-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; align-items: center; justify-content: center; }
+        #signature-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 50; align-items: center; justify-content: center; }
         #signature-pad-container { background: white; padding: 1rem; border-radius: 0.5rem; width: 95%; max-width: 500px; }
-        #sig-canvas { border: 2px dashed #9ca3af; border-radius: 0.5rem; width: 100%; height: 200px !important; background: #f9fafb; touch-action: none; }
+        
+        .cancelled-top { opacity: 0.5; position: relative; }
+        .cancelled-top::after { content: 'VOID'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; color: red; font-weight: bold; border: 4px solid red; padding: 5px; pointer-events: none; }
 
-        .cancelled-top { opacity: 0.4; position: relative; }
-        .cancelled-top::after { content: 'CANCELLED'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-20deg); font-size: 3rem; color: red; font-weight: bold; border: 4px solid red; padding: 10px; pointer-events: none; }
-
-        /* Strict PDF Document Formatting */
-        body.pdf-mode { background-color: white; padding: 0; }
-        .pdf-mode .section-card { box-shadow: none; border: 2px solid #1e293b; padding: 0.75rem; border-radius: 0; margin-bottom: 0.5rem; page-break-inside: avoid; }
-        .pdf-mode input, .pdf-mode textarea, .pdf-mode select { border: none; border-bottom: 1px solid #000; background: transparent; padding: 0.25rem 0; border-radius: 0; resize: none; color: #000; }
-        .pdf-mode label { color: #000; margin-top: 0.25rem; font-size: 0.8rem; }
-        .pdf-mode h2 { font-size: 1.1rem; border-bottom: 2px solid #003366; padding-bottom: 0.25rem; margin-bottom: 0.5rem; }
-        .pdf-mode .no-print { display: none !important; }
-        .pdf-mode .fixed { display: none !important; }
+        /* Specific rules for PDF generation to look like a document */
+        @media print {
+            body { background-color: white !important; }
+            .section-card { border: none !important; border-bottom: 2px solid #000 !important; padding: 0.5rem 0 !important; margin-bottom: 0 !important; border-radius: 0 !important; page-break-inside: avoid; }
+            input, textarea, select { border: none !important; border-bottom: 1px dashed #000 !important; background: transparent !important; padding: 0.25rem 0 !important; border-radius: 0 !important; }
+            .no-print { display: none !important; }
+            .fixed { display: none !important; }
+        }
     </style>
 </head>
-<body class="p-2 sm:p-4 pb-24 text-gray-800" id="app-container">
+<body class="p-2 sm:p-4 pb-24 text-gray-900" id="app-container">
 
-    <div class="flex items-center justify-between mb-4 bg-white p-4 rounded-xl shadow-sm no-print-bg border-b-4 border-[#003366]">
-        <svg viewBox="0 0 250 80" class="h-14 w-auto">
-            <g transform="translate(0, 10)">
-                <path d="M0,0 L12,0 L12,50 L0,50 Z" fill="#3B5B96" />
-                <path d="M16,0 L50,0 C65,0 70,10 65,25 C60,40 50,50 35,50 L16,50 Z" fill="#3B5B96" />
-                <path d="M16,10 L30,50 L50,50 C60,35 60,15 45,0 L35,0 Z" fill="#ffffff" />
-                <text x="80" y="22" font-family="Arial, sans-serif" font-size="28" fill="#2E384D" font-weight="300" letter-spacing="1">PNR</text>
-                <text x="80" y="50" font-family="Arial, sans-serif" font-size="28" fill="#1C2433" font-weight="900" letter-spacing="0">RAILWORKS<tspan font-size="12" dy="-14">®</tspan></text>
-            </g>
-        </svg>
-        <h1 class="text-xl font-bold text-gray-700 hidden sm:block">Job Briefing</h1>
+    <div class="mb-4 bg-white p-4 rounded shadow-sm border-b-4 border-blue-900">
+        <h1 class="text-2xl font-bold text-gray-800 text-center uppercase">Job Briefing</h1>
     </div>
 
     <form id="briefing-form">
+        <!-- Site Info -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Site Information</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Site Information</h2>
             <div class="grid-layout">
                 <div><label>Date & Time Conducted:</label><input type="datetime-local" id="datetime"></div>
                 <div><label>Foreman / Supervisor:</label><input type="text" id="foreman"></div>
@@ -69,15 +57,17 @@
             </div>
         </div>
 
+        <!-- Group Photo -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Group Photo</h2>
-            <label class="no-print text-sm text-gray-500 font-normal mb-2">Use the button below to open your camera and photograph the workgroup.</label>
-            <input type="file" accept="image/*" capture="camera" id="group_photo_input" class="no-print bg-white">
-            <img id="group_photo_preview" class="mt-4 rounded border-2 border-gray-300 max-h-64 w-auto hidden" alt="Group Photo">
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Group Photo</h2>
+            <label class="no-print">Use camera to photograph workgroup:</label>
+            <input type="file" accept="image/*" capture="environment" id="group_photo_input" class="no-print">
+            <img id="group_photo_preview" class="mt-4 rounded border hidden max-h-64 w-auto mx-auto" alt="Group Photo">
         </div>
 
+        <!-- Emergency -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Emergency Information</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Emergency Information</h2>
             <div class="grid-layout">
                 <div class="col-span-1 sm:col-span-2">
                     <label>Nearest Hospital & Address:</label>
@@ -92,8 +82,9 @@
             </div>
         </div>
 
+        <!-- Radio -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Radio / Phone Information</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Radio / Phone Information</h2>
             <select id="location_preset" class="no-print mb-4" onchange="updateRadioFields()">
                 <option value="">-- Select location to auto-fill --</option>
                 <option value='{"stdby":"57-05","rtc":"85-85","tone":"*31","emerg":"*30","dc":"#3"}'>Alexandria Sub (Mile 0.4 - 23.0)</option>
@@ -113,33 +104,37 @@
             </div>
         </div>
 
+        <!-- Rules -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Rule of the Day</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Rule of the Day</h2>
             <label>Rule Number & Description:</label><input type="text" id="rule_of_day">
             <label>TLDR (Summary):</label><textarea id="rule_tldr" rows="2"></textarea>
-            <div class="flex items-center gap-3 mt-4 no-print border p-2 rounded">
+            <div class="flex items-center gap-2 mt-4 no-print bg-gray-100 p-2 border">
                 <input type="checkbox" id="rule_ack">
-                <label style="margin-top:0;" for="rule_ack">I acknowledge that I have reviewed the actual rule with my workgroup.</label>
+                <label style="margin-top:0;" for="rule_ack">I acknowledge reviewing this rule with my workgroup.</label>
             </div>
         </div>
 
+        <!-- TOP / Rule 42 -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Rule 42 Confirmations / TOPs</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Rule 42 Confirmations / TOPs</h2>
             <div id="top-container"></div>
-            <button type="button" class="btn btn-gray no-print" onclick="addTOP()">+ Add Rule 42 / TOP</button>
+            <button type="button" class="btn btn-gray no-print" onclick="addTOP()">+ Add Document</button>
         </div>
 
+        <!-- Safe Work Plan -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Safe Work Plan / Risk Assessment</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Safe Work Plan / Risk Assessment</h2>
             <div id="swp-container"></div>
             <button type="button" class="btn btn-gray no-print" onclick="addSWPRow()">+ Add Task / Hazard</button>
         </div>
 
+        <!-- Safety Watch -->
         <div class="section-card" id="safety-watch-section">
-            <div class="flex justify-between items-center border-b border-[#003366] pb-1 mb-2">
-                <h2 class="text-lg font-bold text-[#003366]">Safety Watch / Lone Worker</h2>
+            <div class="flex justify-between items-center border-b pb-2 mb-2">
+                <h2 class="text-lg font-bold text-blue-900">Safety Watch / Lone Worker</h2>
                 <div class="flex items-center gap-2 no-print">
-                    <span class="text-sm font-bold text-gray-500">Apply?</span>
+                    <span class="text-sm font-bold text-gray-500">Include?</span>
                     <input type="checkbox" id="safety_toggle" checked onchange="toggleSafetyWatch()">
                 </div>
             </div>
@@ -154,23 +149,25 @@
             </div>
         </div>
 
+        <!-- Attendance -->
         <div class="section-card">
-            <h2 class="text-lg font-bold text-[#003366]">Job Briefing Attendance</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-2">Job Briefing Attendance</h2>
             <div id="attendance-container"></div>
             <button type="button" class="btn btn-gray no-print" onclick="addAttendanceRow()">+ Add Attendee</button>
         </div>
     </form>
 
+    <!-- Floating PDF Button -->
     <div class="fixed bottom-4 left-4 right-4 no-print z-40">
-        <button type="button" class="btn btn-blue shadow-lg text-lg py-3" onclick="generatePDF()">Generate PDF</button>
+        <button type="button" class="btn btn-blue text-lg py-4 shadow-lg" onclick="generatePDF()">Download as PDF</button>
     </div>
 
-    <!-- Fixed Signature Modal -->
+    <!-- Signature Modal -->
     <div id="signature-modal" class="no-print">
         <div id="signature-pad-container">
-            <h3 class="text-lg font-bold mb-4 text-[#003366] border-b pb-2">Please Sign Below</h3>
-            <!-- Canvas height strictly enforced in inline style to override mobile clipping -->
-            <canvas id="sig-canvas" style="height: 200px !important; width: 100%; display: block;"></canvas>
+            <h3 class="text-lg font-bold mb-4 text-blue-900 border-b pb-2">Please Sign Below</h3>
+            <!-- Canvas dimensions hardcoded for mobile stability -->
+            <canvas id="sig-canvas" width="400" height="200" style="border: 2px dashed #9ca3af; background: #f3f4f6; width: 100%; touch-action: none;"></canvas>
             <div class="flex gap-2 mt-4">
                 <button type="button" class="btn btn-gray" onclick="closeSignaturePad()">Cancel</button>
                 <button type="button" class="btn btn-red" onclick="sigPad.clear()">Clear</button>
@@ -180,10 +177,12 @@
     </div>
 
     <script>
+        // Setup Date
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
         document.getElementById('datetime').value = now.toISOString().slice(0,16);
 
+        // Geolocation Data
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(async (pos) => {
                 const lat = pos.coords.latitude;
@@ -199,7 +198,7 @@
                     const hData = await hRes.json();
                     if(hData.elements.length > 0) {
                         const el = hData.elements[0];
-                        document.getElementById('hospital').value = `${el.tags.name || 'Local Hospital'} (Coordinates: ${el.lat || el.center.lat}, ${el.lon || el.center.lon})`;
+                        document.getElementById('hospital').value = `${el.tags.name || 'Local Hospital'} (Lat: ${el.lat || el.center.lat}, Lon: ${el.lon || el.center.lon})`;
                     } else {
                         document.getElementById('hospital').value = `No hospital found within 30km.`;
                     }
@@ -209,18 +208,20 @@
             });
         }
 
+        // Group Photo Logic
         document.getElementById('group_photo_input').addEventListener('change', function(e) {
             if(e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function(event) {
                     const img = document.getElementById('group_photo_preview');
-                    img.src = e.target.result;
+                    img.src = event.target.result;
                     img.classList.remove('hidden');
                 }
                 reader.readAsDataURL(e.target.files[0]);
             }
         });
 
+        // Radio Fields
         function updateRadioFields() {
             const val = document.getElementById('location_preset').value;
             if(!val) return;
@@ -232,6 +233,7 @@
             document.getElementById('r_dc').value = data.dc;
         }
 
+        // Rule DB
         const rulesDB = [
             { rule: "Rule 112: Securing Equipment", tldr: "Always test handbrakes. Ensure equipment is properly secured." },
             { rule: "Rule 42: Planned Protection", tldr: "Ensure limits are exact. Do not enter limits without permission." },
@@ -245,22 +247,23 @@
         document.getElementById('rule_of_day').value = rulesDB[dayIndex].rule;
         document.getElementById('rule_tldr').value = rulesDB[dayIndex].tldr;
 
+        // TOP Logic
         let topCount = 0;
         function addTOP() {
             topCount++;
             const id = `top_${topCount}`;
             const html = `
-                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 top-item" style="page-break-inside: avoid;">
+                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 relative" style="page-break-inside: avoid;">
                     <div class="flex justify-between items-center mb-2 no-print">
                         <span class="font-bold text-gray-700">TOP / Rule 42 Document</span>
-                        <button type="button" class="text-red-600 font-bold px-2 border border-red-600 rounded" onclick="cancelTOP('${id}')">Cancel/Void</button>
+                        <button type="button" class="text-red-600 font-bold px-2 py-1 border border-red-600 rounded" onclick="cancelTOP('${id}')">Void</button>
                     </div>
                     <div class="grid-layout mb-2">
                         <div><label>Authority / Rule No:</label><input type="text"></div>
                         <div><label>Limits (From / To):</label><input type="text"></div>
                     </div>
                     <label class="no-print mt-2 text-sm">Take Photo of Document:</label>
-                    <input type="file" accept="image/*" capture="camera" class="no-print bg-white" onchange="previewTOP(this, '${id}')">
+                    <input type="file" accept="image/*" capture="environment" class="no-print bg-white" onchange="previewTOP(this, '${id}')">
                     <img id="img_${id}" class="mt-2 rounded border hidden w-full h-auto" style="max-height: 400px; object-fit: contain;">
                 </div>
             `;
@@ -284,9 +287,10 @@
             }
         }
 
+        // SWP Logic
         function addSWPRow() {
             const html = `
-                <div class="grid-layout p-2 border-b border-gray-300 bg-gray-50 mb-1" style="page-break-inside: avoid;">
+                <div class="grid-layout p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid;">
                     <div><label>Task / Activity:</label><input type="text"></div>
                     <div><label>Hazard / Risk:</label><input type="text"></div>
                     <div class="col-span-1 sm:col-span-2"><label>Control Measure:</label><input type="text"></div>
@@ -294,41 +298,34 @@
             document.getElementById('swp-container').insertAdjacentHTML('beforeend', html);
         }
 
+        // Safety Watch Toggle
         function toggleSafetyWatch() {
             const isChecked = document.getElementById('safety_toggle').checked;
             const content = document.getElementById('safety-watch-content');
             const section = document.getElementById('safety-watch-section');
             if(isChecked) {
-                content.classList.remove('hidden');
+                content.style.display = 'grid';
                 section.classList.remove('no-print');
             } else {
-                content.classList.add('hidden');
+                content.style.display = 'none';
                 section.classList.add('no-print');
             }
         }
 
+        // Signature Pad Logic
         const canvas = document.getElementById('sig-canvas');
-        const sigPad = new SignaturePad(canvas, { backgroundColor: 'rgb(249, 250, 251)' });
+        const sigPad = new SignaturePad(canvas, { backgroundColor: 'rgb(243, 244, 246)' });
         let currentSigImg = null;
-
-        function resizeCanvas() {
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            // Force standard dimensions for the popup
-            canvas.width = canvas.offsetWidth * ratio;
-            canvas.height = 200 * ratio;
-            canvas.getContext("2d").scale(ratio, ratio);
-            sigPad.clear();
-        }
 
         function addAttendanceRow() {
             const id = 'sig_' + Math.random().toString(36).substr(2, 9);
             const html = `
-                <div class="flex items-center gap-2 p-2 border-b border-gray-300 bg-gray-50 mb-1" style="page-break-inside: avoid;">
+                <div class="flex items-center gap-2 p-2 border rounded bg-gray-50 mb-2" style="page-break-inside: avoid;">
                     <div class="flex-1"><label style="margin-top:0;">Name:</label><input type="text"></div>
                     <div class="flex-1">
                         <label style="margin-top:0;">Signature:</label>
                         <button type="button" class="btn btn-blue py-2 mt-1 no-print" onclick="openSignaturePad('${id}')">Sign Here</button>
-                        <img id="${id}" class="h-12 hidden border-b border-black" alt="Signature">
+                        <img id="${id}" class="h-12 hidden border-b border-black w-full object-contain" alt="Signature">
                     </div>
                 </div>`;
             document.getElementById('attendance-container').insertAdjacentHTML('beforeend', html);
@@ -337,8 +334,8 @@
         function openSignaturePad(imgId) {
             currentSigImg = document.getElementById(imgId);
             document.getElementById('signature-modal').style.display = 'flex';
-            // Short timeout ensures the modal is fully visible before resizing canvas
-            setTimeout(() => { resizeCanvas(); }, 150);
+            // Clear pad when opening
+            sigPad.clear();
         }
 
         function closeSignaturePad() {
@@ -353,15 +350,14 @@
             closeSignaturePad();
         }
 
+        // Initialize rows
         addSWPRow();
         addAttendanceRow();
         addTOP();
 
+        // PDF Generation
         function generatePDF() {
-            // 1. Enter Document Mode (strips UI styling)
-            document.body.classList.add('pdf-mode');
-            
-            // 2. Hide cancelled TOPs temporarily so they don't print
+            // Temporarily hide voided TOPs from print view entirely
             const cancelled = document.querySelectorAll('.cancelled-top');
             cancelled.forEach(el => el.style.display = 'none');
 
@@ -369,22 +365,19 @@
             const name = document.getElementById('foreman').value || 'Report';
             
             const opt = {
-                margin:       5,
+                margin:       10,
                 filename:     `Job_Briefing_${name}.pdf`,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024 },
+                html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
             };
 
-            // Allow 200ms for browser to repaint the document mode styling before taking the PDF snapshot
-            setTimeout(() => {
-                html2pdf().set(opt).from(element).save().then(() => {
-                    // 3. Restore Mobile UI Mode after download finishes
-                    document.body.classList.remove('pdf-mode');
-                    cancelled.forEach(el => el.style.display = 'block');
-                });
-            }, 200);
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore voided TOPs to screen after PDF generation
+                cancelled.forEach(el => el.style.display = 'block');
+            });
         }
     </script>
 </body>
 </html>
+
