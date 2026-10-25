@@ -51,4 +51,340 @@
                 <path d="M0,0 L12,0 L12,50 L0,50 Z" fill="#3B5B96" />
                 <path d="M16,0 L50,0 C65,0 70,10 65,25 C60,40 50,50 35,50 L16,50 Z" fill="#3B5B96" />
                 <path d="M16,10 L30,50 L50,50 C60,35 60,15 45,0 L35,0 Z" fill="#ffffff" />
-                <text x="
+                <text x="80" y="22" font-family="Arial, sans-serif" font-size="28" fill="#2E384D" font-weight="300" letter-spacing="1">PNR</text>
+                <text x="80" y="50" font-family="Arial, sans-serif" font-size="28" fill="#1C2433" font-weight="900" letter-spacing="0">RAILWORKS<tspan font-size="12" dy="-14">®</tspan></text>
+            </g>
+        </svg>
+        <h1 class="text-xl font-bold text-gray-700 hidden sm:block">Job Briefing</h1>
+    </div>
+
+    <form id="briefing-form">
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Site Information</h2>
+            <div class="grid-layout">
+                <div><label>Date & Time Conducted:</label><input type="datetime-local" id="datetime"></div>
+                <div><label>Foreman / Supervisor:</label><input type="text" id="foreman"></div>
+                <div><label>Work Location (Mileage/Sub):</label><input type="text" id="work_location"></div>
+                <div><label>Head Count:</label><input type="number" id="head_count"></div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Group Photo</h2>
+            <label class="no-print text-sm text-gray-500 font-normal mb-2">Use the button below to open your camera and photograph the workgroup.</label>
+            <input type="file" accept="image/*" capture="camera" id="group_photo_input" class="no-print bg-white">
+            <img id="group_photo_preview" class="mt-4 rounded border-2 border-gray-300 max-h-64 w-auto hidden" alt="Group Photo">
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Emergency Information</h2>
+            <div class="grid-layout">
+                <div class="col-span-1 sm:col-span-2">
+                    <label>Nearest Hospital & Address:</label>
+                    <textarea id="hospital" rows="2">Fetching location...</textarea>
+                </div>
+                <div class="col-span-1 sm:col-span-2">
+                    <label>Current Weather Condition:</label>
+                    <textarea id="weather" rows="2">Fetching local weather...</textarea>
+                </div>
+                <div><label>Fire / Ambulance:</label><input type="text" value="911" id="fire_ambulance"></div>
+                <div><label>RTC Phone #:</label><input type="text" value="1-888-641-2177" id="rtc_phone"></div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Radio / Phone Information</h2>
+            <select id="location_preset" class="no-print mb-4" onchange="updateRadioFields()">
+                <option value="">-- Select location to auto-fill --</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*31","emerg":"*30","dc":"#3"}'>Alexandria Sub (Mile 0.4 - 23.0)</option>
+                <option value='{"stdby":"52-05","rtc":"85-85","tone":"*41","emerg":"*40","dc":"#4"}'>Alexandria Sub (Mile 23.0 - 61.0)</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Alexandria Sub (Mile 61.0 - 76.43)</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*21","emerg":"*20","dc":"#2"}'>Beachburg Sub (Mile 0.3 - 6.0)</option>
+                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*11","emerg":"*10","dc":"#1"}'>Smiths Falls (Mile 0.0 - 34.4)</option>
+                <option value='{"stdby":"57-05","rtc":"85-85","tone":"*51","emerg":"*50","dc":"#5"}'>Brockville Sub (Mile 0.0 - 27.6)</option>
+                <option value='{"stdby":"63-05","rtc":"85-85","tone":"*61","emerg":"*60","dc":"#6"}'>Brockville Sub (Station Tower)</option>
+            </select>
+            <div class="grid-layout">
+                <div><label>Stand-By Channel:</label><input type="text" id="r_stdby"></div>
+                <div><label>RTC Channel:</label><input type="text" id="r_rtc"></div>
+                <div><label>RTC Tone:</label><input type="text" id="r_tone"></div>
+                <div><label>Emergency Tone:</label><input type="text" id="r_emerg"></div>
+                <div><label>DC #:</label><input type="text" id="r_dc"></div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Rule of the Day</h2>
+            <label>Rule Number & Description:</label><input type="text" id="rule_of_day">
+            <label>TLDR (Summary):</label><textarea id="rule_tldr" rows="2"></textarea>
+            <div class="flex items-center gap-3 mt-4 no-print border p-2 rounded">
+                <input type="checkbox" id="rule_ack">
+                <label style="margin-top:0;" for="rule_ack">I acknowledge that I have reviewed the actual rule with my workgroup.</label>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Rule 42 Confirmations / TOPs</h2>
+            <div id="top-container"></div>
+            <button type="button" class="btn btn-gray no-print" onclick="addTOP()">+ Add Rule 42 / TOP</button>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Safe Work Plan / Risk Assessment</h2>
+            <div id="swp-container"></div>
+            <button type="button" class="btn btn-gray no-print" onclick="addSWPRow()">+ Add Task / Hazard</button>
+        </div>
+
+        <div class="section-card" id="safety-watch-section">
+            <div class="flex justify-between items-center border-b border-[#003366] pb-1 mb-2">
+                <h2 class="text-lg font-bold text-[#003366]">Safety Watch / Lone Worker</h2>
+                <div class="flex items-center gap-2 no-print">
+                    <span class="text-sm font-bold text-gray-500">Apply?</span>
+                    <input type="checkbox" id="safety_toggle" checked onchange="toggleSafetyWatch()">
+                </div>
+            </div>
+            <div id="safety-watch-content" class="grid-layout">
+                <div><label>Designated Safety Watch:</label><input type="text"></div>
+                <div><label>Position of Safety Watch:</label><input type="text"></div>
+                <div><label>Maximum Zone Train Speed:</label><input type="text"></div>
+                <div><label>Minimum Required Sight Distance:</label><input type="text"></div>
+                <div class="col-span-1 sm:col-span-2"><label>Statement of On-Track Safety Completed?</label>
+                    <select><option>Yes</option><option>No (Lone Worker not permitted)</option></select>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <h2 class="text-lg font-bold text-[#003366]">Job Briefing Attendance</h2>
+            <div id="attendance-container"></div>
+            <button type="button" class="btn btn-gray no-print" onclick="addAttendanceRow()">+ Add Attendee</button>
+        </div>
+    </form>
+
+    <div class="fixed bottom-4 left-4 right-4 no-print z-40">
+        <button type="button" class="btn btn-blue shadow-lg text-lg py-3" onclick="generatePDF()">Generate PDF</button>
+    </div>
+
+    <!-- Fixed Signature Modal -->
+    <div id="signature-modal" class="no-print">
+        <div id="signature-pad-container">
+            <h3 class="text-lg font-bold mb-4 text-[#003366] border-b pb-2">Please Sign Below</h3>
+            <!-- Canvas height strictly enforced in inline style to override mobile clipping -->
+            <canvas id="sig-canvas" style="height: 200px !important; width: 100%; display: block;"></canvas>
+            <div class="flex gap-2 mt-4">
+                <button type="button" class="btn btn-gray" onclick="closeSignaturePad()">Cancel</button>
+                <button type="button" class="btn btn-red" onclick="sigPad.clear()">Clear</button>
+                <button type="button" class="btn btn-blue" onclick="saveSignature()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        document.getElementById('datetime').value = now.toISOString().slice(0,16);
+
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lon = pos.coords.longitude;
+                try {
+                    const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+                    const wData = await wRes.json();
+                    document.getElementById('weather').value = `Temp: ${wData.current_weather.temperature}°C, Wind: ${wData.current_weather.windspeed} km/h`;
+                } catch(e) {}
+                try {
+                    const query = `[out:json];nwr(around:30000,${lat},${lon})[amenity=hospital];out center 1;`;
+                    const hRes = await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`);
+                    const hData = await hRes.json();
+                    if(hData.elements.length > 0) {
+                        const el = hData.elements[0];
+                        document.getElementById('hospital').value = `${el.tags.name || 'Local Hospital'} (Coordinates: ${el.lat || el.center.lat}, ${el.lon || el.center.lon})`;
+                    } else {
+                        document.getElementById('hospital').value = `No hospital found within 30km.`;
+                    }
+                } catch(e) {}
+            }, (err) => {
+                document.getElementById('hospital').value = "Location access denied.";
+            });
+        }
+
+        document.getElementById('group_photo_input').addEventListener('change', function(e) {
+            if(e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById('group_photo_preview');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function updateRadioFields() {
+            const val = document.getElementById('location_preset').value;
+            if(!val) return;
+            const data = JSON.parse(val);
+            document.getElementById('r_stdby').value = data.stdby;
+            document.getElementById('r_rtc').value = data.rtc;
+            document.getElementById('r_tone').value = data.tone;
+            document.getElementById('r_emerg').value = data.emerg;
+            document.getElementById('r_dc').value = data.dc;
+        }
+
+        const rulesDB = [
+            { rule: "Rule 112: Securing Equipment", tldr: "Always test handbrakes. Ensure equipment is properly secured." },
+            { rule: "Rule 42: Planned Protection", tldr: "Ensure limits are exact. Do not enter limits without permission." },
+            { rule: "Rule 14: Engine Whistle Signals", tldr: "Sound whistle appropriately at crossings and when workers are nearby." },
+            { rule: "Rule 104: Hand Operated Switches", tldr: "Always restore and lock switches to normal position after use." },
+            { rule: "Rule 136: Radio Monitoring", tldr: "Stand-by channel must be monitored at all times." },
+            { rule: "Rule 26: Blue Signal Protection", tldr: "Never couple to or move equipment protected by a blue signal." },
+            { rule: "Rule 842: Protection of Track Work", tldr: "Confirm all routing arrangements and stop signals are placed." }
+        ];
+        const dayIndex = new Date().getDay();
+        document.getElementById('rule_of_day').value = rulesDB[dayIndex].rule;
+        document.getElementById('rule_tldr').value = rulesDB[dayIndex].tldr;
+
+        let topCount = 0;
+        function addTOP() {
+            topCount++;
+            const id = `top_${topCount}`;
+            const html = `
+                <div id="${id}" class="mb-4 p-3 border rounded bg-gray-50 top-item" style="page-break-inside: avoid;">
+                    <div class="flex justify-between items-center mb-2 no-print">
+                        <span class="font-bold text-gray-700">TOP / Rule 42 Document</span>
+                        <button type="button" class="text-red-600 font-bold px-2 border border-red-600 rounded" onclick="cancelTOP('${id}')">Cancel/Void</button>
+                    </div>
+                    <div class="grid-layout mb-2">
+                        <div><label>Authority / Rule No:</label><input type="text"></div>
+                        <div><label>Limits (From / To):</label><input type="text"></div>
+                    </div>
+                    <label class="no-print mt-2 text-sm">Take Photo of Document:</label>
+                    <input type="file" accept="image/*" capture="camera" class="no-print bg-white" onchange="previewTOP(this, '${id}')">
+                    <img id="img_${id}" class="mt-2 rounded border hidden w-full h-auto" style="max-height: 400px; object-fit: contain;">
+                </div>
+            `;
+            document.getElementById('top-container').insertAdjacentHTML('beforeend', html);
+        }
+        
+        function cancelTOP(id) {
+            const el = document.getElementById(id);
+            el.classList.contains('cancelled-top') ? el.classList.remove('cancelled-top') : el.classList.add('cancelled-top');
+        }
+        
+        function previewTOP(input, id) {
+            if(input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(`img_${id}`);
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function addSWPRow() {
+            const html = `
+                <div class="grid-layout p-2 border-b border-gray-300 bg-gray-50 mb-1" style="page-break-inside: avoid;">
+                    <div><label>Task / Activity:</label><input type="text"></div>
+                    <div><label>Hazard / Risk:</label><input type="text"></div>
+                    <div class="col-span-1 sm:col-span-2"><label>Control Measure:</label><input type="text"></div>
+                </div>`;
+            document.getElementById('swp-container').insertAdjacentHTML('beforeend', html);
+        }
+
+        function toggleSafetyWatch() {
+            const isChecked = document.getElementById('safety_toggle').checked;
+            const content = document.getElementById('safety-watch-content');
+            const section = document.getElementById('safety-watch-section');
+            if(isChecked) {
+                content.classList.remove('hidden');
+                section.classList.remove('no-print');
+            } else {
+                content.classList.add('hidden');
+                section.classList.add('no-print');
+            }
+        }
+
+        const canvas = document.getElementById('sig-canvas');
+        const sigPad = new SignaturePad(canvas, { backgroundColor: 'rgb(249, 250, 251)' });
+        let currentSigImg = null;
+
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            // Force standard dimensions for the popup
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = 200 * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            sigPad.clear();
+        }
+
+        function addAttendanceRow() {
+            const id = 'sig_' + Math.random().toString(36).substr(2, 9);
+            const html = `
+                <div class="flex items-center gap-2 p-2 border-b border-gray-300 bg-gray-50 mb-1" style="page-break-inside: avoid;">
+                    <div class="flex-1"><label style="margin-top:0;">Name:</label><input type="text"></div>
+                    <div class="flex-1">
+                        <label style="margin-top:0;">Signature:</label>
+                        <button type="button" class="btn btn-blue py-2 mt-1 no-print" onclick="openSignaturePad('${id}')">Sign Here</button>
+                        <img id="${id}" class="h-12 hidden border-b border-black" alt="Signature">
+                    </div>
+                </div>`;
+            document.getElementById('attendance-container').insertAdjacentHTML('beforeend', html);
+        }
+
+        function openSignaturePad(imgId) {
+            currentSigImg = document.getElementById(imgId);
+            document.getElementById('signature-modal').style.display = 'flex';
+            // Short timeout ensures the modal is fully visible before resizing canvas
+            setTimeout(() => { resizeCanvas(); }, 150);
+        }
+
+        function closeSignaturePad() {
+            document.getElementById('signature-modal').style.display = 'none';
+        }
+
+        function saveSignature() {
+            if (sigPad.isEmpty()) return alert("Please provide a signature.");
+            currentSigImg.src = sigPad.toDataURL();
+            currentSigImg.classList.remove('hidden');
+            currentSigImg.previousElementSibling.classList.add('hidden');
+            closeSignaturePad();
+        }
+
+        addSWPRow();
+        addAttendanceRow();
+        addTOP();
+
+        function generatePDF() {
+            // 1. Enter Document Mode (strips UI styling)
+            document.body.classList.add('pdf-mode');
+            
+            // 2. Hide cancelled TOPs temporarily so they don't print
+            const cancelled = document.querySelectorAll('.cancelled-top');
+            cancelled.forEach(el => el.style.display = 'none');
+
+            const element = document.getElementById('app-container');
+            const name = document.getElementById('foreman').value || 'Report';
+            
+            const opt = {
+                margin:       5,
+                filename:     `Job_Briefing_${name}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024 },
+                jsPDF:        { unit: 'mm', format: 'letter', orientation: 'portrait' }
+            };
+
+            // Allow 200ms for browser to repaint the document mode styling before taking the PDF snapshot
+            setTimeout(() => {
+                html2pdf().set(opt).from(element).save().then(() => {
+                    // 3. Restore Mobile UI Mode after download finishes
+                    document.body.classList.remove('pdf-mode');
+                    cancelled.forEach(el => el.style.display = 'block');
+                });
+            }, 200);
+        }
+    </script>
+</body>
+</html>
